@@ -14,6 +14,7 @@ data <- data[-which(is.na(data$nuclei)),-1] # leave ID column out and remove NAs
 
 # FUNCTIONS ---------------------------------------------------------------
 
+
 ### split data into test and training sets
 # df:         data set
 # train_amt:  proportion of data to use for training
@@ -49,7 +50,7 @@ EM <- function(x, y, R, tol = 1e-6, maxit = 10) {
   ### come up with starting points using kmeans
   for(k in 1:K) {
     ind <- which(y == k)
-    mu[k, , ] <- t(kmeans(x[ind, ], 2)$centers)
+    mu[k, , ] <- t(kmeans(x[ind, ], R)$centers)
     pi[k, ] <- rep(1/R, length = R)
   }
   converged <- F
@@ -120,7 +121,7 @@ em_predict <- function(em, x) {
 
 
 R <- 3 # number of subclasses
-training_amount <- 0.5
+training_amount <- 0.3
 
 X <- split_data(data, training_amount, 10)
 x_train <- X$x_train
@@ -135,3 +136,23 @@ fit_pred <- em_predict(fit, x_test)
 # resulting confusion matrix and error rate
 confusion(fit_pred, class_test)
 
+# try PCA
+x <- rbind(x_train, x_test)
+x_scaled <- apply(x, 2, function(x) (x - mean(x))/sd(x))
+eig <- eigen(cov(x_scaled))
+eig$values/sum(eig$values)
+V <- eig$vectors[ ,1:2]
+x_new <- as.matrix(x_scaled %*% V)
+x_train_new <- x_new[1:nrow(x_train), ]
+x_test_new <- x_new[-(1:nrow(x_train)), ]
+
+fit2 <- EM(x_train_new, class_train, R)
+fit_pred2 <- em_predict(fit2, x_test_new)
+confusion(fit_pred2, class_test)
+
+plot(x_train_new, pch = 10, alpha = 0.5, col = as.numeric(class_train)+1)
+points(t(fit2$mu[1, , ]), pch = 8, cex = 3, lwd = 3, col = 2)
+points(t(fit2$mu[2, , ]), pch = 8, cex = 3, lwd = 3, col = 3)
+plot(x_test_new, pch = 10, col = as.numeric(class_test)+1)
+points(t(fit2$mu[1, , ]), pch = 8, cex = 3, lwd = 3, col = 2)
+points(t(fit2$mu[2, , ]), pch = 8, cex = 3, lwd = 3, col = 3)
