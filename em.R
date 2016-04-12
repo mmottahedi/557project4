@@ -84,7 +84,7 @@ EM <- function(x, y, R, tol = 1e-6, maxit = 10) {
     }
     sigma <- tally/N
     # check convergence
-    
+
   }
   return(list(pi = pi,
               mu = mu,
@@ -103,7 +103,7 @@ em_predict <- function(em, x) {
   K <- dim(mu)[1]
   R <- dim(mu)[3]
   classes <- rep(NA, nrow(x))
-  
+
   for(i in 1:nrow(x)) {
     probs <- rep(0, K)
     for(k in 1:K) {
@@ -118,7 +118,7 @@ em_predict <- function(em, x) {
 
 
 # SCRIPT ------------------------------------------------------------------
-
+require(DAAG)
 
 R <- 3 # number of subclasses
 training_amount <- 0.3
